@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Matcher — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #060813; color: #e8ecf4; min-height: 100vh;
+  font-family: 'Instrument Sans', -apple-system, sans-serif;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1a1e2e; border-radius: 4px; }
+
+.grain {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 36px 48px 60px; position: relative; z-index: 1; }
+
+@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes pulse { 0%,100% { opacity:.4; } 50% { opacity:1; } }
+@keyframes gradientShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+
+/* Header */
+.logo-row { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.logo-icon { width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,#00f0ff,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:16px; }
+.logo-text { font-size:11px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:#4a5170; }
+.status-dot { width:6px; height:6px; border-radius:50%; background:#34d399; box-shadow:0 0 8px #34d39966; animation:pulse 2s ease infinite; }
+h1 {
+  font-size:48px; font-weight:900; letter-spacing:-0.04em; line-height:1.05;
+  font-family:'Playfair Display',serif;
+  background:linear-gradient(135deg,#e8ecf4 0%,#6b7394 100%);
+  background-size:200% 200%; animation:gradientShift 8s ease infinite;
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;
+}
+.subtitle { font-size:15px; color:#3a4160; max-width:520px; line-height:1.6; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; margin-top:28px; margin-bottom:32px; }
+.tab {
+  padding:10px 22px; border:none; border-radius:10px; cursor:pointer;
+  font-size:13px; font-weight:600; letter-spacing:0.02em;
+  font-family:'Instrument Sans',sans-serif; background:transparent; color:#3a4160;
+  transition:all 0.3s ease;
+}
+.tab.active { background:#00f0ff11; color:#00f0ff; }
+
+/* Cards */
+.card {
+  padding:22px 20px; border-radius:14px; background:#0a0d17; border:1px solid #151929;
+}
+.stat-value {
+  font-size:36px; font-weight:900; font-family:'Playfair Display',serif; letter-spacing:-0.03em;
+}
+.stat-label { font-size:11px; color:#3a4160; margin-top:4px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+
+/* Grids */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:32px; }
+.domain-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.section-title { font-size:14px; font-weight:700; color:#3a4160; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px; }
+
+.domain-card { padding:18px 16px; border-radius:14px; background:#0a0d17; border:1px solid #151929; position:relative; overflow:hidden; }
+.domain-bar { position:absolute; bottom:0; left:0; right:0; transition:height 1s ease; }
+.domain-count { font-size:28px; font-weight:900; font-family:'Playfair Display',serif; position:relative; }
+.domain-name { font-size:11px; color:#4a5170; margin-top:4px; font-weight:500; position:relative; }
+
+/* Candidates */
+.candidate {
+  background:#0a0d17; border-radius:16px; border:1px solid #151929;
+  cursor:pointer; overflow:hidden; transition:all 0.4s cubic-bezier(.4,0,.2,1);
+  margin-bottom:8px;
+}
+.candidate.open { background:#0f1220; }
+.candidate-header { display:flex; align-items:center; gap:18px; padding:18px 24px; }
+.rank-badge {
+  width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-family:'Playfair Display',serif; font-weight:800; font-size:18px; flex-shrink:0;
+}
+.cand-name { font-size:17px; font-weight:700; color:#e8ecf4; font-family:'Playfair Display',serif; letter-spacing:-0.02em; }
+.cand-meta { font-size:12px; color:#4a5170; margin-top:3px; }
+.status-badge {
+  display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+  padding:3px 10px; border-radius:6px; margin-left:10px;
+}
+
+.cand-detail { padding:0 24px 22px; }
+.cand-summary {
+  padding:18px 0 16px; margin-bottom:16px; font-size:14px; line-height:1.7;
+  color:#8890a8; border-left:2px solid; padding-left:16px;
+}
+.skills-row { display:flex; flex-wrap:wrap; gap:6px; }
+.skill-tag {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:600; letter-spacing:0.02em;
+}
+.skill-tag.matched { background:rgba(0,240,255,0.08); color:#00f0ff; border:1px solid rgba(0,240,255,0.2); }
+.skill-tag.missing { background:rgba(244,114,182,0.06); color:#f472b644; border:1px solid rgba(244,114,182,0.1); text-decoration:line-through; }
+.skills-label { font-size:10px; font-weight:700; letter-spacing:0.12em; color:#3a4160; text-transform:uppercase; margin-bottom:8px; }
+
+/* Score ring SVG */
+.score-ring { flex-shrink:0; }
+
+/* Signal cards */
+.signals-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:32px; }
+.signal-card { padding:16px; border-radius:12px; background:#0e1120; }
+.signal-name { font-size:13px; font-weight:700; color:#8890a8; }
+.signal-weight { font-size:18px; font-weight:900; font-family:'Playfair Display',serif; }
+.signal-desc { font-size:11px; color:#2d3350; margin-top:6px; }
+
+/* Loading */
+.loading { text-align:center; padding:80px 0; color:#3a4160; font-size:15px; }
+.loading-spinner {
+  width:40px; height:40px; border:3px solid #151929; border-top-color:#00f0ff;
+  border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Report */
+.report-box {
+  padding:16px 20px; border-radius:12px; background:#080b14;
+  font-family:'Instrument Sans',monospace; font-size:12.5px; line-height:1.8;
+  color:#4a5170; white-space:pre-line; border-left:2px solid #00f0ff22;
+  max-height:400px; overflow-y:auto;
+}
+
+@media (max-width:768px) {
+  .wrap { padding:20px 16px; }
+  h1 { font-size:32px; }
+  .stats-grid, .domain-grid, .signals-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="logo-row">
+    <div class="logo-icon">⬡</div>
+    <span class="logo-text">CV MATCHER</span>
+    <div class="status-dot"></div>
+  </div>
+  <h1>Intelligent Resume<br>Ranking Engine</h1>
+  <p class="subtitle">AI-powered pipeline — email scan, OCR extraction, multi-language translation, domain classification, hybrid matching, and candidate analysis.</p>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showPage('results')">Results</button>
+    <button class="tab" onclick="showPage('report')">Report</button>
+  </div>
+
+  <!-- Content -->
+  <div id="page-dashboard"></div>
+  <div id="page-results" style="display:none"></div>
+  <div id="page-report" style="display:none"></div>
+
+</div>
+
+<script>
+let DATA = null;
+let REPORT = null;
+
+const DOMAIN_COLORS = {
+  Data_Science: "#00f0ff", Backend_Development: "#a78bfa", Frontend_Development: "#f472b6",
+  AI_ML_Engineering: "#34d399", DevOps: "#fbbf24", UI_UX_Design: "#fb923c",
+  Mobile_Development: "#60a5fa", QA_Engineering: "#c084fc", Cybersecurity: "#ef4444",
+  Product_Management: "#06b6d4", Business_Analysis: "#84cc16", Data_Engineering: "#e879f9",
+  Cloud_Engineering: "#38bdf8", Full_Stack_Development: "#f59e0b", Other: "#6b7280",
+};
+
+function scoreColor(s) {
+  return s >= 85 ? "#00f0ff" : s >= 70 ? "#34d399" : s >= 50 ? "#fbbf24" : "#f472b6";
+}
+function statusText(s) {
+  return s >= 85 ? "excellent" : s >= 70 ? "strong" : s >= 50 ? "good" : "partial";
+}
+function statusColor(s) {
+  return s >= 85 ? "rgba(0,240,255,0.1);color:#00f0ff" : s >= 70 ? "rgba(52,211,153,0.1);color:#34d399" : "rgba(251,191,36,0.1);color:#fbbf24";
+}
+
+function scoreRingSVG(score, size=56) {
+  const stroke = 4, r = (size-stroke)/2, circ = 2*Math.PI*r;
+  const offset = circ - (score/100)*circ;
+  const c = scoreColor(score);
+  return `<svg width="${size}" height="${size}" style="transform:rotate(-90deg)" class="score-ring">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1a1e2e" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${c}" stroke-width="${stroke}"
+      stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"
+      style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="central"
+      fill="${c}" font-size="${size*0.28}" font-weight="800"
+      font-family="'Instrument Sans',sans-serif"
+      style="transform:rotate(90deg);transform-origin:center">${Math.round(score)}</text>
+  </svg>`;
+}
+
+function showPage(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  ['dashboard','results','report'].forEach(p => {
+    document.getElementById('page-'+p).style.display = p===id ? 'block' : 'none';
+  });
+}
+
+function toggleCandidate(rank) {
+  const el = document.getElementById('cand-detail-'+rank);
+  const card = document.getElementById('cand-'+rank);
+  if (el.style.display === 'none') {
+    document.querySelectorAll('.cand-detail-box').forEach(d => d.style.display='none');
+    document.querySelectorAll('.candidate').forEach(c => c.classList.remove('open'));
+    el.style.display = 'block';
+    card.classList.add('open');
+  } else {
+    el.style.display = 'none';
+    card.classList.remove('open');
+  }
+}
+
+function renderDashboard() {
+  if (!DATA) { document.getElementById('page-dashboard').innerHTML = '<div class="loading"><div class="loading-spinner"></div>dashboard_data.json yüklənir...</div>'; return; }
+  const d = DATA;
+  const totalCVs = d.total_cvs_analyzed || d.domains.reduce((a,x) => a+x.count, 0);
+  const topScore = d.candidates.length ? d.candidates[0].score : 0;
+  const avgScore = d.candidates.length ? (d.candidates.reduce((a,c) => a+c.score, 0) / d.candidates.length) : 0;
+
+  let html = `
+    <div class="stats-grid">
+      ${[
+        {label:"Total CVs", value:totalCVs, color:"#00f0ff"},
+        {label:"Domains", value:d.domains.length, color:"#a78bfa"},
+        {label:"Top Score", value:topScore.toFixed(1)+"%", color:"#34d399"},
+        {label:"Avg Match", value:avgScore.toFixed(1)+"%", color:"#fbbf24"},
+      ].map((s,i) => `
+        <div class="card" style="animation:slideUp 0.5s ease ${i*0.1}s both">
+          <div class="stat-value" style="color:${s.color}">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>`).join('')}
+    </div>
+    <div class="section-title">CV Distribution by Domain</div>
+    <div class="domain-grid">
+      ${d.domains.map((dm,i) => {
+        const c = DOMAIN_COLORS[dm.name] || "#6b7280";
+        const maxCount = Math.max(...d.domains.map(x=>x.count));
+        const pct = (dm.count/maxCount)*60;
+        return `<div class="domain-card" style="animation:slideUp 0.5s ease ${0.4+i*0.06}s both">
+          <div class="domain-bar" style="height:${pct}%;background:linear-gradient(180deg,${c}08,${c}03)"></div>
+          <div class="domain-count" style="color:${c}">${dm.count}</div>
+          <div class="domain-name">${dm.name.replace(/_/g,' ')}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="section-title" style="margin-top:32px">Vacancy Info</div>
+    <div class="card" style="display:flex;gap:24px;align-items:center">
+      <div>
+        <div style="font-size:13px;color:#4a5170">Domain</div>
+        <div style="font-size:20px;font-weight:800;color:#00f0ff;font-family:'Playfair Display',serif;margin-top:4px">${d.job_domain.replace(/_/g,' ')}</div>
+      </div>
+      <div style="width:1px;height:40px;background:#151929"></div>
+      <div>
+        <div style="font-size:13px;color:#4a5170">Analyzed</div>
+        <div style="font-size:20px;font-weight:800;color:#a78bfa;font-family:'Playfair Display',serif;margin-top:4px">${d.total_cvs_analyzed} CVs</div>
+      </div>
+      <div style="width:1px;height:40px;background:#151929"></div>
+      <div>
+        <div style="font-size:13px;color:#4a5170">Selected</div>
+        <div style="font-size:20px;font-weight:800;color:#34d399;font-family:'Playfair Display',serif;margin-top:4px">Top ${d.top_k}</div>
+      </div>
+      <div style="width:1px;height:40px;background:#151929"></div>
+      <div>
+        <div style="font-size:13px;color:#4a5170">Generated</div>
+        <div style="font-size:20px;font-weight:800;color:#fbbf24;font-family:'Playfair Display',serif;margin-top:4px">${d.timestamp}</div>
+      </div>
+    </div>
+    <div class="signals-grid">
+      ${[
+        {name:"Embedding",weight:"45%",color:"#00f0ff",desc:"TF-IDF + Semantic similarity"},
+        {name:"BM25",weight:"20%",color:"#a78bfa",desc:"Keyword frequency overlap"},
+        {name:"Skills",weight:"25%",color:"#34d399",desc:"Direct skill match ratio"},
+        {name:"Metadata",weight:"10%",color:"#fbbf24",desc:"Education + Experience bonus"},
+      ].map(s => `
+        <div class="signal-card" style="border-left:3px solid ${s.color}">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span class="signal-name">${s.name}</span>
+            <span class="signal-weight" style="color:${s.color}">${s.weight}</span>
+          </div>
+          <div class="signal-desc">${s.desc}</div>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('page-dashboard').innerHTML = html;
+}
+
+function renderResults() {
+  if (!DATA) { document.getElementById('page-results').innerHTML = '<div class="loading"><div class="loading-spinner"></div>Yüklənir...</div>'; return; }
+  const cands = DATA.candidates;
+  let html = `
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <h2 style="font-size:22px;font-weight:800;font-family:'Playfair Display',serif;letter-spacing:-0.02em">Top Candidates</h2>
+        <p style="font-size:12px;color:#3a4160;margin-top:4px">
+          Ranked by hybrid similarity · ${DATA.job_domain.replace(/_/g,' ')} · ${DATA.total_cvs_analyzed} CVs analyzed
+        </p>
+      </div>
+      <div style="padding:8px 18px;border-radius:10px;background:#00f0ff08;border:1px solid #00f0ff15;font-size:12px;color:#00f0ff;font-weight:600">
+        ${cands.length} selected → Selected_Candidates/
+      </div>
+    </div>`;
+
+  cands.forEach((c, i) => {
+    const bc = scoreColor(c.score);
+    const st = statusText(c.score);
+    html += `
+    <div class="candidate" id="cand-${c.rank}" onclick="toggleCandidate(${c.rank})" style="animation:slideUp 0.5s ease ${i*0.08}s both">
+      <div class="candidate-header">
+        <div class="rank-badge" style="background:linear-gradient(135deg,${bc}22,${bc}08);color:${bc}">${c.rank}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center">
+            <span class="cand-name">${c.filename}</span>
+            <span class="status-badge" style="background:${statusColor(c.score)}">${st}</span>
+          </div>
+          <div class="cand-meta">${c.matched_skills.length} skills matched · ${c.missing_skills.length} missing</div>
+        </div>
+        ${scoreRingSVG(c.score)}
+      </div>
+      <div class="cand-detail-box" id="cand-detail-${c.rank}" style="display:${i===0?'block':'none'}">
+        <div class="cand-detail">
+          <div class="cand-summary" style="border-color:${bc}44">${c.explanation}</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+            <div class="signal-card" style="border-left:3px solid #00f0ff;padding:10px 12px">
+              <div style="font-size:10px;color:#3a4160;font-weight:600">EMBEDDING</div>
+              <div style="font-size:16px;font-weight:800;color:#00f0ff;font-family:'Playfair Display',serif">${(c.embedding_score*100).toFixed(1)}%</div>
+            </div>
+            <div class="signal-card" style="border-left:3px solid #a78bfa;padding:10px 12px">
+              <div style="font-size:10px;color:#3a4160;font-weight:600">BM25</div>
+              <div style="font-size:16px;font-weight:800;color:#a78bfa;font-family:'Playfair Display',serif">${(c.bm25_score*100).toFixed(1)}%</div>
+            </div>
+            <div class="signal-card" style="border-left:3px solid #34d399;padding:10px 12px">
+              <div style="font-size:10px;color:#3a4160;font-weight:600">SKILLS</div>
+              <div style="font-size:16px;font-weight:800;color:#34d399;font-family:'Playfair Display',serif">${(c.skill_overlap_score*100).toFixed(1)}%</div>
+            </div>
+            <div class="signal-card" style="border-left:3px solid #fbbf24;padding:10px 12px">
+              <div style="font-size:10px;color:#3a4160;font-weight:600">METADATA</div>
+              <div style="font-size:16px;font-weight:800;color:#fbbf24;font-family:'Playfair Display',serif">${(c.metadata_score*100).toFixed(1)}%</div>
+            </div>
+          </div>
+
+          <div class="skills-label">Matched Skills</div>
+          <div class="skills-row" style="margin-bottom:12px">
+            ${c.matched_skills.map(s => `<span class="skill-tag matched"><span style="font-size:8px">●</span> ${s}</span>`).join('')}
+          </div>
+          <div class="skills-label">Missing Skills</div>
+          <div class="skills-row">
+            ${c.missing_skills.map(s => `<span class="skill-tag missing">${s}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('page-results').innerHTML = html;
+}
+
+function renderReport() {
+  let html;
+  if (REPORT) {
+    html = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h2 style="font-size:22px;font-weight:800;font-family:'Playfair Display',serif">AI Analysis Report</h2>
+        <span style="font-size:11px;color:#2d3350">analysis_report.txt</span>
+      </div>
+      <div class="report-box">${REPORT.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  } else {
+    html = `<div class="loading">
+      <div style="font-size:40px;margin-bottom:16px">📊</div>
+      <div>analysis_report.txt tapılmadı</div>
+      <div style="font-size:13px;color:#2d3350;margin-top:8px">Əvvəlcə pipeline-ı işlədin: python main.py full-pipeline --top-k 5</div>
+    </div>`;
+  }
+  document.getElementById('page-report').innerHTML = html;
+}
+
+// ── Load data ──
+// PIPELINE_DATA_INJECT placeholder — pipeline bu sətiri real data ilə əvəz edir
+async function loadData() {
+  try {
+    const resp = await fetch('dashboard_data.json');
+    if (resp.ok) { DATA = await resp.json(); }
+  } catch(e) {}
+  try {
+    const resp = await fetch('analysis_report.txt');
+    if (resp.ok) { REPORT = await resp.text(); }
+  } catch(e) {}
+  renderDashboard();
+  renderResults();
+  renderReport();
+}
+
+function initFromEmbeddedData() {
+  renderDashboard();
+  renderResults();
+  renderReport();
+}
+
+if (DATA) { initFromEmbeddedData(); } else { loadData(); }
+</script>
+</body>
+</html>

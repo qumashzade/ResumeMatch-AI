@@ -1,0 +1,24 @@
+# Şəxsi konfiqurasiya (API key, şifrələr)
+config.py
+
+# Nəticə qovluqları
+Selected_Candidates/
+CVs/
+Extra_CVs/
+data/downloaded_cvs/
+vacancies/*/results/
+
+# Python cache
+__pycache__/
+modules/__pycache__/
+*.pyc
+*.pyo
+
+# Dashboard data
+dashboard_data.json
+analysis_report.txt
+
+# OS faylları
+.DS_Store
+Thumbs.db
+desktop.ini

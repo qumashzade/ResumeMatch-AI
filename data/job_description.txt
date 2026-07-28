@@ -1,0 +1,24 @@
+Job Title: Junior Data Scientist
+Company: TechVision Analytics
+Location: Remote / Hybrid (London, UK)
+
+About the Role:
+We are looking for a Junior Data Scientist to join our growing analytics team. You will work on building machine learning models, analyzing large datasets, and delivering actionable insights to stakeholders.
+
+Required Skills & Qualifications:
+- Bachelor's or Master's degree in Computer Science, Statistics, Mathematics, or related field
+- Strong proficiency in Python programming
+- Experience with Pandas, NumPy
+- Knowledge of Scikit-learn, TensorFlow, or PyTorch
+- Understanding of statistical analysis and hypothesis testing
+- Experience with SQL and relational databases
+- Familiarity with Matplotlib, Seaborn, Tableau, or Power BI
+- Good communication skills
+
+Preferred Qualifications:
+- Experience with cloud platforms (AWS, GCP, or Azure)
+- Knowledge of deep learning and neural networks
+- Experience with NLP or computer vision projects
+- Familiarity with Git, Docker
+- Experience with Spark, Hadoop
+- Experience with A/B testing
