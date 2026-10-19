@@ -19,8 +19,8 @@ AI-powered HR pipeline that automatically processes, classifies, and ranks CVs a
 
 1. **Clone and install:**
 ```bash
-git clone https://github.com/YOUR_USERNAME/cv-matcher.git
-cd cv-matcher
+git clone https://github.com/qumashzade/ResumeMatch-AI.git
+cd ResumeMatch-AI
 pip install -r requirements.txt
 ```
 
