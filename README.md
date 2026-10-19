@@ -1,4 +1,4 @@
-# CV Matcher — Intelligent Resume Ranking Engine
+# ResumeMatch-AI — Intelligent Resume Ranking Engine
 
 AI-powered HR pipeline that automatically processes, classifies, and ranks CVs against job descriptions.
 
